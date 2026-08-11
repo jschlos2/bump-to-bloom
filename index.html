@@ -118,6 +118,8 @@ input{font-family:inherit;}
 .product-icon{width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;background:var(--blush);flex-shrink:0;}
 .product-name{font-weight:800;font-size:14px;margin:0;color:var(--ink);}
 .product-why{font-size:12px;line-height:1.4;color:var(--muted);margin:2px 0 0;}
+.product-retailer{font-size:10px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--sage);margin:6px 0 0;}
+a.view-btn{display:inline-block;text-decoration:none;}
 .product-price{font-size:12px;font-weight:800;color:var(--sage-dark);margin:0 0 6px;text-align:right;}
 .view-btn{font-size:11px;font-weight:800;padding:6px 12px;border-radius:999px;color:#fff;background:var(--sage);}
 
@@ -269,31 +271,50 @@ function nearestCheckpoint(month){
   return result;
 }
 
+/* ---- Retailer linking ----
+   AFFILIATE_TAGS: drop your real affiliate/partner IDs in here once you have them.
+   - Amazon Associates: apply at affiliate-program.amazon.com, then your tag is appended as ?tag=YOURTAG-20
+   - Target Partners: apply via Impact (impact.com) -> Target's program generates a tracked deep link per product
+   - Babylist: apply at babylist.com/affiliates
+   Until then, links point to real Amazon/Target search results for each product so "View" always works. */
+var AFFILIATE_TAGS = { amazon: "", target: "" }; // e.g. amazon: "bumptobloom-20"
+
+function amazonLink(query){
+  var url = "https://www.amazon.com/s?k=" + encodeURIComponent(query);
+  if (AFFILIATE_TAGS.amazon) url += "&tag=" + encodeURIComponent(AFFILIATE_TAGS.amazon);
+  return url;
+}
+function targetLink(query){
+  var url = "https://www.target.com/s?searchTerm=" + encodeURIComponent(query);
+  if (AFFILIATE_TAGS.target) url += "&afid=" + encodeURIComponent(AFFILIATE_TAGS.target);
+  return url;
+}
+
 var PRODUCTS = {
  pregnancy: {
-  1: [ {name:"Prenatal Vitamin with Folic Acid", why:"Supports your baby's early neural tube development.", icon:"💊", price:"$18"},
-       {name:"Ginger Chews", why:"A gentle option some people find helpful for early nausea.", icon:"🍬", price:"$8"},
-       {name:"Supportive Flat Shoes", why:"Comfort matters as your center of gravity begins to shift.", icon:"👟", price:"$45"} ],
-  2: [ {name:"Maternity Support Band", why:"Eases lower back and belly strain as your bump grows.", icon:"🎗️", price:"$24"},
-       {name:"Pregnancy Pillow", why:"Supports side-sleeping comfort as your bump grows.", icon:"🛏️", price:"$52"},
-       {name:"Belly Oil", why:"Helps keep skin comfortable as it stretches.", icon:"🧴", price:"$16"} ],
-  3: [ {name:"Hospital Bag Checklist Kit", why:"Stay organized as your due date approaches.", icon:"🎒", price:"$0"},
-       {name:"Nursing Pillow", why:"Sets you up for comfortable feeding once baby arrives.", icon:"🤱", price:"$36"},
-       {name:"Infant Car Seat", why:"Required for the ride home — worth installing ahead of time.", icon:"🚗", price:"$180"} ]
+  1: [ {name:"Prenatal Vitamin with Folic Acid", why:"Supports your baby's early neural tube development.", icon:"💊", price:"$18", retailer:"Amazon", url:amazonLink("prenatal vitamin folic acid")},
+       {name:"Ginger Chews", why:"A gentle option some people find helpful for early nausea.", icon:"🍬", price:"$8", retailer:"Target", url:targetLink("ginger chews nausea")},
+       {name:"Supportive Flat Shoes", why:"Comfort matters as your center of gravity begins to shift.", icon:"👟", price:"$45", retailer:"Amazon", url:amazonLink("supportive flat shoes maternity")} ],
+  2: [ {name:"Maternity Support Band", why:"Eases lower back and belly strain as your bump grows.", icon:"🎗️", price:"$24", retailer:"Amazon", url:amazonLink("maternity belly support band")},
+       {name:"Pregnancy Pillow", why:"Supports side-sleeping comfort as your bump grows.", icon:"🛏️", price:"$52", retailer:"Target", url:targetLink("pregnancy pillow")},
+       {name:"Belly Oil", why:"Helps keep skin comfortable as it stretches.", icon:"🧴", price:"$16", retailer:"Amazon", url:amazonLink("pregnancy belly oil stretch marks")} ],
+  3: [ {name:"Hospital Bag Checklist Kit", why:"Stay organized as your due date approaches.", icon:"🎒", price:"$0", retailer:"Amazon", url:amazonLink("hospital bag essentials checklist")},
+       {name:"Nursing Pillow", why:"Sets you up for comfortable feeding once baby arrives.", icon:"🤱", price:"$36", retailer:"Target", url:targetLink("nursing pillow")},
+       {name:"Infant Car Seat", why:"Required for the ride home — worth installing ahead of time.", icon:"🚗", price:"$180", retailer:"Amazon", url:amazonLink("infant car seat")} ]
  },
  postnatal: {
-  "0-3": [ {name:"Muslin Swaddle Blankets", why:"Help newborns feel secure and sleep more soundly.", icon:"🧸", price:"$22"},
-           {name:"Bassinet or Co-Sleeper", why:"A safe, close-by sleep space for the early months.", icon:"🛏️", price:"$120"},
-           {name:"Burp Cloths (multi-pack)", why:"A newborn essential for feeding cleanup.", icon:"🧻", price:"$14"} ],
-  "4-8": [ {name:"Teething Toys", why:"Many babies start teething and mouthing objects around this stage.", icon:"🦷", price:"$12"},
-           {name:"High Chair", why:"Useful as you approach starting solid foods.", icon:"🪑", price:"$95"},
-           {name:"Baby-Safe Mirror", why:"Encourages social engagement during tummy time and play.", icon:"🪞", price:"$15"} ],
-  "9-14": [ {name:"Push Walker", why:"Supports early cruising and first steps.", icon:"🚶", price:"$40"},
-            {name:"Stacking Cups", why:"Builds fine motor and problem-solving skills.", icon:"🥤", price:"$10"},
-            {name:"Baby-Proofing Kit", why:"Cabinet locks and outlet covers for a newly mobile explorer.", icon:"🔒", price:"$20"} ],
-  "15-24": [ {name:"Board Books (set)", why:"Supports language development and shared reading time.", icon:"📚", price:"$18"},
-             {name:"Shape Sorter", why:"Builds problem-solving and hand-eye coordination.", icon:"🔷", price:"$16"},
-             {name:"Toddler Utensils", why:"Encourages growing independence at mealtime.", icon:"🍴", price:"$11"} ]
+  "0-3": [ {name:"Muslin Swaddle Blankets", why:"Help newborns feel secure and sleep more soundly.", icon:"🧸", price:"$22", retailer:"Amazon", url:amazonLink("muslin swaddle blankets")},
+           {name:"Bassinet or Co-Sleeper", why:"A safe, close-by sleep space for the early months.", icon:"🛏️", price:"$120", retailer:"Target", url:targetLink("bassinet co-sleeper")},
+           {name:"Burp Cloths (multi-pack)", why:"A newborn essential for feeding cleanup.", icon:"🧻", price:"$14", retailer:"Amazon", url:amazonLink("burp cloths multi pack")} ],
+  "4-8": [ {name:"Teething Toys", why:"Many babies start teething and mouthing objects around this stage.", icon:"🦷", price:"$12", retailer:"Target", url:targetLink("baby teething toys")},
+           {name:"High Chair", why:"Useful as you approach starting solid foods.", icon:"🪑", price:"$95", retailer:"Amazon", url:amazonLink("baby high chair")},
+           {name:"Baby-Safe Mirror", why:"Encourages social engagement during tummy time and play.", icon:"🪞", price:"$15", retailer:"Amazon", url:amazonLink("baby safe mirror tummy time")} ],
+  "9-14": [ {name:"Push Walker", why:"Supports early cruising and first steps.", icon:"🚶", price:"$40", retailer:"Target", url:targetLink("baby push walker")},
+            {name:"Stacking Cups", why:"Builds fine motor and problem-solving skills.", icon:"🥤", price:"$10", retailer:"Amazon", url:amazonLink("baby stacking cups toy")},
+            {name:"Baby-Proofing Kit", why:"Cabinet locks and outlet covers for a newly mobile explorer.", icon:"🔒", price:"$20", retailer:"Amazon", url:amazonLink("baby proofing kit cabinet locks")} ],
+  "15-24": [ {name:"Board Books (set)", why:"Supports language development and shared reading time.", icon:"📚", price:"$18", retailer:"Target", url:targetLink("toddler board books set")},
+             {name:"Shape Sorter", why:"Builds problem-solving and hand-eye coordination.", icon:"🔷", price:"$16", retailer:"Amazon", url:amazonLink("toddler shape sorter toy")},
+             {name:"Toddler Utensils", why:"Encourages growing independence at mealtime.", icon:"🍴", price:"$11", retailer:"Amazon", url:amazonLink("toddler self feeding utensils")} ]
  }
 };
 
@@ -690,16 +711,17 @@ function actView(){
   var cards = items.map(function(p){
     return '<div class="card product-row">' +
       '<div class="product-icon">' + p.icon + '</div>' +
-      '<div style="flex:1;min-width:0;"><p class="product-name">' + p.name + '</p><p class="product-why">' + p.why + '</p></div>' +
+      '<div style="flex:1;min-width:0;"><p class="product-name">' + p.name + '</p><p class="product-why">' + p.why + '</p>' +
+        '<p class="product-retailer">' + p.retailer + '</p></div>' +
       '<div style="text-align:right;flex-shrink:0;"><p class="product-price">' + p.price + '</p>' +
-        '<button class="view-btn" data-act="view-product" data-arg="' + encodeURIComponent(p.name) + '">View</button></div>' +
+        '<a class="view-btn" href="' + p.url + '" target="_blank" rel="noopener noreferrer" data-act="track-outbound" data-arg="' + encodeURIComponent(p.name + ' (' + p.retailer + ')') + '">View ↗</a></div>' +
     '</div>';
   }).join('');
   return '' +
   '<div class="section fade-up">' +
     '<div><p class="card-title" style="margin-top:0;">Curated For You</p><p class="card-body" style="margin:0;">' + label + ' — sample picks for this prototype</p></div>' +
     '<div style="display:flex;flex-direction:column;gap:12px;">' + cards + '</div>' +
-    '<p class="disclaimer">Sample recommendations for demo purposes — the full product would link to real retailers like Amazon and Target.</p>' +
+    '<p class="disclaimer">Sample picks for this prototype — "View" opens a live Amazon or Target search in a new tab. Swap in your affiliate tag in AFFILIATE_TAGS (or real product links) once your partner accounts are approved.</p>' +
   '</div>';
 }
 
@@ -875,7 +897,7 @@ function handleAction(act, arg){
     render();
   }
   else if (act==='set-filter'){ state.learnFilter = arg; render(); }
-  else if (act==='view-product'){ showToast(decodeURIComponent(arg) + ' — added to your list ✓'); }
+  else if (act==='track-outbound'){ showToast('Opening ' + decodeURIComponent(arg) + ' →'); }
   else if (act==='chat-send'){ chatSend(); }
   else if (act==='select-health-topic'){ state.healthTopic = arg; render(); }
   else if (act==='health-back'){ state.healthTopic = null; render(); }
