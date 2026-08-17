@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BumpToBloom — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Karla:wght@400;600;700&family=Source+Sans+3:wght@400;600;700&family=Petrona:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#faf1e1;
+    --ink:#2c3a2c;
+    --ink2:#1f211b;
+    --moss:#4c6b4a;
+    --mossdark:#33502f;
+    --deep:#33473a;
+    --honey:#e9a94f;
+    --honeyink:#4a3418;
+    --terra:#f7e3d6;
+    --hairline:#e6dcc8;
+    --card:#fdf9ef;
+    --muted:#6e7a68;
+    --muted2:#4d5348;
+    --sage:#7e9468;
+    --tagbg:#e4ead6;
+    --rosebg:#f3dccb;
+    --footer:#f3ecda;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:#e9e2d3;font-family:'Source Sans 3',sans-serif;padding:40px 12px;
+  }
+  .phone{
+    position:relative;width:390px;height:812px;background:var(--paper);
+    border:1px solid var(--hairline);border-radius:44px;
+    box-shadow:0 24px 64px rgba(44,58,44,0.28);overflow:hidden;
+  }
+  .statusbar{height:44px;display:flex;align-items:center;justify-content:center;
+    font-family:'Karla',sans-serif;font-weight:700;font-size:13px;color:var(--ink);flex-shrink:0;}
+  .frame{display:flex;flex-direction:column;height:100%;}
+  .topbar{position:relative;padding:14px 20px 12px 20px;flex-shrink:0;}
+  .topbar-row{display:flex;align-items:center;justify-content:space-between;}
+  .brand{display:flex;align-items:center;gap:8px;}
+  .brand .mark{width:21.6px;height:27px;object-fit:contain;display:block;}
+  .brand-name{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:17px;color:var(--ink2);}
+  .stage-pill{background:var(--tagbg);border-radius:14px;padding:5px 14px;font-family:'Source Sans 3',sans-serif;
+    font-weight:600;font-size:14px;color:var(--ink2);display:flex;align-items:center;gap:6px;cursor:pointer;border:none;}
+  .stage-pill .pencil{font-size:11px;color:var(--deep);}
+  .stage-row{display:flex;align-items:center;gap:8px;margin-top:14px;}
+  .stage-emoji{font-size:13px;}
+  .stage-label{font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:14px;letter-spacing:1px;color:var(--muted2);}
+  .progress-track{flex:1;height:5px;background:#d9e0c7;border-radius:3px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--sage);border-radius:3px;}
+  .hairline{height:1px;background:var(--hairline);margin-top:14px;}
+  .content{flex:1;overflow-y:auto;padding:16px 20px 24px 20px;-ms-overflow-style:none;scrollbar-width:none;}
+  .content::-webkit-scrollbar{display:none;}
+
+  .section-eyebrow{font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:13px;letter-spacing:1px;
+    color:var(--muted2);text-transform:uppercase;margin:0 0 4px 0;}
+  .section-title{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:22px;color:var(--ink2);margin:0 0 6px 0;}
+  .card{background:var(--card);border:1px solid var(--hairline);border-radius:16px;padding:16px;margin-bottom:14px;}
+  .tag{display:inline-block;background:var(--tagbg);border-radius:10px;padding:2px 10px;font-family:'Source Sans 3',sans-serif;
+    font-weight:600;font-size:13px;letter-spacing:0.5px;color:var(--ink2);margin-bottom:8px;}
+  .card-heading{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:17px;color:var(--ink2);margin:0 0 8px 0;}
+  .card-body{font-family:'Source Sans 3',sans-serif;font-size:16px;line-height:1.3;color:var(--muted2);margin:0;}
+  .more-link{font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:16px;color:var(--ink2);margin-top:10px;cursor:pointer;}
+  .quick-actions{display:flex;gap:8px;margin:16px 0;}
+  .quick-action{flex:1;background:var(--card);border:1px solid var(--hairline);border-radius:14px;padding:12px 4px;
+    text-align:center;cursor:pointer;font-family:'Source Sans 3',sans-serif;}
+  .quick-action .qicon{font-size:18px;display:block;margin-bottom:6px;}
+  .quick-action .qlabel{font-weight:600;font-size:11px;color:var(--ink2);}
+  .highlight-row{display:flex;align-items:center;gap:14px;background:var(--rosebg);border-radius:14px;padding:14px 16px;
+    margin-bottom:12px;cursor:pointer;}
+  .highlight-row.amber{background:var(--honey);}
+  .highlight-row .hicon{font-size:20px;color:#7a3b2a;}
+  .highlight-row.amber .hicon{font-size:16px;color:#3a2a14;}
+  .highlight-row .htext strong{display:block;font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:16px;color:#582a1e;}
+  .highlight-row.amber .htext strong{color:#2a1e0e;}
+  .highlight-row .htext span{font-size:16px;color:#582a1e;}
+  .highlight-row.amber .htext span{color:#2a1e0e;}
+  .disclaimer{text-align:center;font-size:16px;color:var(--muted2);line-height:1.3;margin-top:6px;}
+  .profile-card{background:var(--deep);border:1px solid var(--hairline);border-radius:24px;padding:16px;
+    display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+  .profile-avatar{width:72px;height:72px;border-radius:18px;border:2px solid var(--hairline);
+    background:radial-gradient(circle at 30% 30%, #ffffff55, #ffffff00 70%), linear-gradient(140deg,#4c6b4a,#233022);flex-shrink:0;}
+  .profile-info p{margin:0;}
+  .profile-eyebrow{font-family:'Karla',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;color:#a4a89a;}
+  .profile-name{font-family:'Petrona',serif;font-size:22px;color:#e7e7e2;margin-top:2px !important;}
+  .profile-sub{font-family:'Karla',sans-serif;font-size:14px;color:#a4a89a;margin-top:2px !important;}
+
+  .bottomnav{flex-shrink:0;background:var(--footer);display:flex;justify-content:space-around;align-items:flex-start;
+    padding:10px 6px 10px 6px;position:relative;}
+  .navitem{flex:1;text-align:center;cursor:pointer;padding:6px 0;border-radius:10px;color:var(--muted);}
+  .navitem.active{background:var(--tagbg);color:var(--deep);}
+  .navitem .nicon{display:block;font-size:16px;margin-bottom:4px;}
+  .navitem .nlabel{font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:9px;}
+
+  /* Onboarding frame */
+  .onboard-frame{display:flex;flex-direction:column;align-items:center;height:100%;padding:0 0 24px 0;overflow-y:auto;}
+  .onboard-logo{display:flex;flex-direction:column;align-items:center;margin-top:24px;}
+  .onboard-logo .mark{width:54.4px;height:68px;object-fit:contain;display:block;}
+  .onboard-logo .name{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:32px;color:#33473a;margin-top:10px;}
+  .onboard-sub{font-family:'Source Sans 3',sans-serif;font-size:16px;color:var(--ink);text-align:center;width:300px;
+    margin:16px auto 0 auto;line-height:1.3;}
+  .onboard-question{font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:24px;letter-spacing:1px;
+    color:#4d5348;text-align:center;width:335px;margin:24px auto 0 auto;}
+  .onboard-card{background:#fdf9ef;border:1px solid #e9dfc8;border-radius:24px;padding:32px;width:296px;
+    margin:20px auto 0 auto;box-shadow:0 8px 12px rgba(51,71,58,0.07);display:flex;flex-direction:column;gap:14px;}
+  .back-row{display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:2px;
+    font-family:'Karla',sans-serif;font-weight:700;font-size:16px;color:var(--mossdark);}
+  .journey-option{background:var(--terra);border:1px solid var(--hairline);border-radius:24px;padding:16px;
+    display:flex;gap:10px;align-items:center;cursor:pointer;}
+  .journey-option .jemoji{font-size:22px;}
+  .journey-option .jtitle{font-family:'Karla',sans-serif;font-weight:600;font-size:20px;color:var(--ink);margin:0;}
+  .journey-option .jsub{font-family:'Karla',sans-serif;font-size:16px;color:#4a3418;margin:2px 0 0 0;}
+  .journey-option.selected{outline:2px solid var(--moss);}
+  .journey-option.disabled{opacity:0.4;cursor:not-allowed;filter:grayscale(70%);pointer-events:none;position:relative;}
+  .submit-btn{background:var(--honey);border:none;border-radius:24px;height:48px;display:flex;align-items:center;
+    justify-content:center;font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:20px;color:var(--honeyink);
+    cursor:pointer;width:100%;}
+  .privacy-note{font-family:'Source Sans 3',sans-serif;font-size:11px;color:#6b7364;text-align:center;opacity:0.8;margin:0;}
+  .avatar-circle{width:100px;height:100px;border-radius:50%;margin:0 auto;background:linear-gradient(135deg,#e5c9a3,#b98a5b);}
+  .change-pic-row{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;
+    font-family:'Source Sans 3',sans-serif;font-size:12px;color:#6b7364;}
+  .onboard-heading2{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:20px;color:#33473a;text-align:center;margin-top:10px;}
+  .text-input{background:var(--terra);border:1px solid var(--moss);border-radius:14px;height:52px;display:flex;
+    align-items:center;padding:0 16px;font-family:'Source Sans 3',sans-serif;font-size:16px;color:var(--muted);width:100%;outline:none;}
+  .month-label{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:24px;color:#25332a;margin:0;}
+  input[type=range].month-slider{width:100%;accent-color:#33473a;margin:8px 0 4px 0;}
+  .month-minmax{display:flex;justify-content:space-between;font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:16px;color:#4d5348;}
+
+  /* Modal */
+  .modal-overlay{position:absolute;inset:0;background:rgba(33,46,64,0.35);display:none;align-items:flex-end;z-index:40;}
+  .modal-overlay.open{display:flex;}
+  .modal-sheet{background:var(--card);border-radius:24px 24px 0 0;width:100%;padding:28px 28px 28px 28px;}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .modal-title{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:22px;color:#25332a;margin:0;}
+  .modal-close{font-size:16px;color:#6b7364;cursor:pointer;background:none;border:none;}
+  .modal-value{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:32px;color:#25332a;text-align:center;margin:8px 0 20px 0;}
+  .modal-save{background:var(--honey);border:none;border-radius:26px;height:52px;width:100%;
+    font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:16px;color:#2a1e0e;cursor:pointer;margin-top:8px;}
+
+  /* Track screen */
+  .track-strip-row{display:flex;align-items:center;gap:8px;padding:8px 0 16px 0;}
+  .week-strip{display:flex;align-items:center;gap:6px;overflow-x:hidden;flex:1;}
+  .week-circle{flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--tagbg);display:flex;
+    align-items:center;justify-content:center;font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:13px;
+    color:#2b2e26;cursor:pointer;}
+  .week-circle.active{background:var(--deep);color:#e7e7e2;}
+  .chev{flex-shrink:0;font-size:18px;color:#25332a;cursor:pointer;user-select:none;
+    width:28px;height:28px;border-radius:50%;background:var(--card);border:1px solid var(--hairline);
+    display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
+  .chev:hover{background:var(--tagbg);}
+  .chev:active{background:var(--deep);color:#fff;}
+  .info-card{background:var(--card);border:1px solid var(--hairline);border-radius:16px;padding:18px 16px;margin-bottom:14px;}
+  .info-card h4{font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:16px;letter-spacing:0.8px;color:#4d5348;
+    text-transform:uppercase;margin:14px 0 6px 0;}
+  .info-card h4:first-child{margin-top:0;}
+  .info-card p{font-family:'Source Sans 3',sans-serif;font-size:16px;color:#1f211b;margin:0 0 4px 0;line-height:1.3;}
+
+  /* Learn */
+  .cat-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:16px;}
+  .cat-row::-webkit-scrollbar{display:none;}
+  .cat-pill{flex-shrink:0;padding:0 16px;height:32px;border-radius:16px;display:flex;align-items:center;
+    font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap;
+    background:var(--card);border:1px solid var(--hairline);color:#1f211b;}
+  .cat-pill.active{background:var(--deep);color:#e7e7e2;border-color:var(--deep);}
+  .article-card{background:var(--card);border:1px solid var(--hairline);border-radius:16px;padding:16px;margin-bottom:14px;}
+  .article-card .tag{margin-bottom:10px;}
+  .article-card h4{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:17px;color:#1f211b;margin:0 0 8px 0;}
+  .article-card p{font-family:'Source Sans 3',sans-serif;font-size:16px;color:#4d5348;margin:0 0 10px 0;line-height:1.3;}
+  .article-card .source{font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:14px;color:#4d5348;letter-spacing:0.5px;}
+
+  /* Cart */
+  .cart-intro{font-family:'Source Sans 3',sans-serif;font-size:16px;color:#4d5348;margin:0 0 16px 0;line-height:1.3;}
+  .product-card{background:var(--card);border:1px solid var(--hairline);border-radius:16px;padding:16px;margin-bottom:14px;}
+  .product-top{display:flex;gap:14px;}
+  .product-thumb{width:56px;height:56px;border-radius:12px;background:var(--rosebg);flex-shrink:0;}
+  .product-info{flex:1;}
+  .product-info .prow{display:flex;justify-content:space-between;align-items:flex-start;}
+  .product-info .pname{font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:16px;color:#1f211b;margin:0;}
+  .product-info .pprice{font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:16px;color:#1f211b;margin:0;}
+  .product-info .pdesc{font-family:'Source Sans 3',sans-serif;font-size:15px;color:#4d5348;margin:6px 0 0 0;line-height:1.25;}
+  .product-actions{display:flex;gap:8px;margin-top:14px;}
+  .add-cart-btn{background:var(--card);border:1px solid var(--sage);border-radius:15px;height:30px;padding:0 14px;
+    font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:14px;color:#25332a;cursor:pointer;}
+  .add-cart-btn.added{background:var(--tagbg);border-color:var(--tagbg);}
+  .retailer-btn{background:var(--card);border:1px solid var(--hairline);border-radius:13px;height:26px;padding:0 12px;
+    font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:12px;color:#4d5348;cursor:pointer;}
+  .cart-list-summary{background:var(--card);border:1px solid var(--hairline);border-radius:16px;padding:16px;margin-bottom:14px;}
+  .cart-list-summary .lrow{display:flex;justify-content:space-between;font-family:'Source Sans 3',sans-serif;font-size:16px;color:#25332a;margin-bottom:6px;}
+  .cart-list-summary .ltitle{font-weight:600;letter-spacing:0.5px;text-transform:uppercase;font-size:14px;color:#25332a;}
+  .cart-list-summary hr{border:none;border-top:1px solid #e6dcc8;margin:10px 0;}
+  .cart-list-summary .ltotal{font-weight:700;}
+  .cart-list-summary .lnote{font-family:'Source Sans 3',sans-serif;font-size:13px;color:#4d5348;margin-top:8px;line-height:1.3;}
+  .back-link{font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:16px;letter-spacing:1px;color:#25332a;
+    cursor:pointer;text-align:center;margin:12px 0;}
+  .cart-badge{position:absolute;top:18px;left:311px;width:16px;height:16px;border-radius:50%;background:#c0392b;color:#fff;
+    font-size:10px;display:flex;align-items:center;justify-content:center;font-family:'Source Sans 3',sans-serif;font-weight:700;}
+
+  /* Health */
+  .emergency-banner{background:var(--rosebg);border-radius:14px;padding:12px 16px;margin-bottom:16px;
+    font-family:'Source Sans 3',sans-serif;font-size:15px;color:#582a1e;line-height:1.3;}
+  .health-card{background:var(--card);border:1px solid var(--hairline);border-radius:16px;padding:18px 16px;}
+  .health-card h3{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:22px;color:#1f211b;margin:0 0 6px 0;}
+  .health-card .sub{font-family:'Source Sans 3',sans-serif;font-size:16px;color:#4d5348;margin:0 0 14px 0;line-height:1.3;}
+  .field-label{font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:14px;letter-spacing:0.6px;color:#4d5348;
+    text-transform:uppercase;margin-bottom:6px;display:block;}
+  .field-input{width:100%;background:var(--terra);border:1px solid var(--hairline);border-radius:12px;height:44px;
+    padding:0 14px;font-family:'Source Sans 3',sans-serif;font-size:16px;color:#1f211b;margin-bottom:16px;outline:none;}
+  .check-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;}
+  .check-row input{margin-top:2px;width:17px;height:17px;accent-color:#33473a;}
+  .check-row label{font-family:'Source Sans 3',sans-serif;font-size:15px;color:#1f211b;line-height:1.3;}
+  .check-title{font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:14px;letter-spacing:0.6px;color:#4d5348;
+    text-transform:uppercase;margin:14px 0 12px 0;}
+  .check-btn{background:var(--honey);border:none;border-radius:26px;height:52px;width:100%;
+    font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:16px;color:#2a1e0e;cursor:pointer;margin-top:8px;}
+  .fever-article-head{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+  .fever-icon{width:48px;height:48px;border-radius:12px;background:var(--rosebg);display:flex;align-items:center;justify-content:center;font-size:22px;}
+  .fever-article-head h2{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:26px;color:#1f211b;margin:0;}
+  .bullet-list{list-style:none;margin:0;padding:0;}
+  .bullet-list li{display:flex;gap:10px;font-family:'Source Sans 3',sans-serif;font-size:15px;color:#1f211b;line-height:1.35;margin-bottom:12px;}
+  .bullet-list li:last-child{margin-bottom:0;}
+  .bullet-list li::before{content:"•";color:#4d5348;flex-shrink:0;}
+
+  /* Chat */
+  .chat-notice{background:var(--card);border:1px solid var(--hairline);border-radius:14px;padding:14px 16px;margin-bottom:14px;
+    font-family:'Source Sans 3',sans-serif;font-size:14px;color:#4d5348;line-height:1.3;}
+  .chat-scroll{display:flex;flex-direction:column;gap:12px;}
+  .bubble{max-width:82%;padding:14px 16px;border-radius:18px;font-family:'Source Sans 3',sans-serif;font-size:15px;line-height:1.35;}
+  .bubble.bloom{background:var(--card);border:1px solid var(--hairline);align-self:flex-start;color:#1f211b;}
+  .bubble.user{background:var(--terra);align-self:flex-end;color:#3a2410;}
+  .chat-input-row{display:flex;align-items:center;gap:10px;margin-top:16px;}
+  .chat-input{flex:1;background:var(--card);border:1px solid var(--hairline);border-radius:26px;height:52px;
+    padding:0 20px;font-family:'Source Sans 3',sans-serif;font-size:15px;color:#1f211b;outline:none;}
+  .send-btn{width:40px;height:40px;border-radius:50%;background:var(--honey);border:none;color:#2a1e0e;font-size:18px;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+  /* Milestones */
+  .ms-group{background:var(--card);border:1px solid var(--hairline);border-radius:16px;padding:16px;margin-bottom:14px;}
+  .ms-group .mstitle{display:flex;align-items:center;gap:8px;font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:16px;color:#1f211b;margin-bottom:10px;}
+  .ms-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;}
+  .ms-row:last-child{margin-bottom:0;}
+  .ms-row input{margin-top:2px;width:17px;height:17px;accent-color:#33473a;}
+  .ms-row label{font-family:'Source Sans 3',sans-serif;font-size:15px;color:#1f211b;}
+
+  .screen{display:none;height:100%;flex-direction:column;}
+  .screen.visible{display:flex;}
+
+  .toolbar{position:fixed;top:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:50;}
+  .toolbar button{background:#25332a;color:#f4ead9;border:none;border-radius:20px;padding:8px 16px;
+    font-family:'Source Sans 3',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+  .toolbar button:hover{background:#33473a;}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button onclick="restartProto()">↺ Restart</button>
+</div>
+
+<div class="phone" id="phone">
+
+  <!-- SCREEN 1: Welcome / journey select -->
+  <div class="screen visible" id="s1">
+    <div class="onboard-frame">
+      <div class="statusbar">9:41</div>
+      <div class="onboard-logo">
+        <img class="mark" src="https://www.figma.com/api/mcp/asset/f5293120-d0f8-4a09-8698-f3571c91e733.png" alt="BumpToBloom logo">
+        <div class="name">BumpToBloom</div>
+      </div>
+      <p class="onboard-sub">Tended, not tracked. A companion for first-time moms, from trying through the toddler years.</p>
+      <p class="onboard-question">WHERE ARE YOU IN YOUR JOURNEY?</p>
+      <div class="onboard-card">
+        <div class="journey-option disabled" id="opt-expecting">
+          <span class="jemoji">🌱</span>
+          <div>
+            <p class="jtitle">I’m expecting</p>
+            <p class="jsub">Track your pregnancy week by week</p>
+          </div>
+        </div>
+        <div class="journey-option selected" id="opt-baby" onclick="selectJourney('baby')">
+          <span class="jemoji">🌸</span>
+          <div>
+            <p class="jtitle">My baby is here</p>
+            <p class="jsub">Follow milestones from birth to 24 months</p>
+          </div>
+        </div>
+        <button class="submit-btn" onclick="goTo('s2')">Continue</button>
+        <p class="privacy-note">You can update this anytime in your profile settings.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Onboarding - name & age -->
+  <div class="screen" id="s2">
+    <div class="onboard-frame">
+      <div class="statusbar">9:41</div>
+      <div class="onboard-logo" style="margin-top:12px;">
+        <img class="mark" style="width:40px;height:50px;object-fit:contain;" src="https://www.figma.com/api/mcp/asset/f5293120-d0f8-4a09-8698-f3571c91e733.png" alt="BumpToBloom logo">
+        <div class="name" style="font-size:24px;">BumpToBloom</div>
+      </div>
+      <div class="onboard-card" style="margin-top:16px;">
+        <div class="back-row" onclick="goTo('s1')"><span>←</span> Back</div>
+        <div class="avatar-circle"></div>
+        <div class="change-pic-row">Change Profile Picture ✎</div>
+        <p class="onboard-heading2">What's your baby’s name and age?</p>
+        <input class="text-input" placeholder="Name" id="baby-name-input" />
+        <div>
+          <p class="month-label" id="month-label-2">Month 8</p>
+          <input type="range" class="month-slider" min="0" max="24" value="8" oninput="document.getElementById('month-label-2').textContent='Month '+this.value">
+          <div class="month-minmax"><span>Month 0</span><span>Month 24</span></div>
+        </div>
+        <button class="submit-btn" onclick="continueOnboarding()">Continue</button>
+        <p class="privacy-note">You can update this anytime in your profile settings.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: Home (Bloom / baby stage) -->
+  <div class="screen" id="s3">
+    <div class="frame">
+      <div class="statusbar">9:41</div>
+      <div class="topbar">
+        <div class="topbar-row">
+          <div class="brand"><img class="mark" src="https://www.figma.com/api/mcp/asset/f5293120-d0f8-4a09-8698-f3571c91e733.png" alt="BumpToBloom logo"><span class="brand-name">BumpToBloom</span></div>
+          <button class="stage-pill" onclick="openModal()"><span class="pill-value">Month 8</span> <span class="pencil">✎</span></button>
+        </div>
+        <div class="stage-row">
+          <span class="stage-emoji">🌸</span><span class="stage-label">BLOOM</span>
+          <div class="progress-track"><div class="progress-fill" style="width:35%;"></div></div>
+        </div>
+      </div>
+      <div class="hairline"></div>
+      <div class="content">
+        <div class="profile-card">
+          <div class="profile-avatar"></div>
+          <div class="profile-info">
+            <p class="profile-eyebrow" id="profile-eyebrow">BLOOM · MONTH 8</p>
+            <p class="profile-name" id="profile-name">Emma Rose</p>
+            <p class="profile-sub" id="profile-sub">8 months</p>
+          </div>
+        </div>
+        <div class="card">
+          <span class="tag">THIS WEEK, FOR YOU</span>
+          <p class="card-heading" id="home-card-heading">Month 8: what is typical</p>
+          <p class="card-body" id="home-card-body">Babies at this age often show readiness for finger foods and may begin sitting without support.</p>
+          <div class="more-link" onclick="goTo('s6')">More guidance →</div>
+        </div>
+        <div class="quick-actions">
+          <div class="quick-action" onclick="goTo('s5')"><span class="qicon">🌱</span><span class="qlabel">Track</span></div>
+          <div class="quick-action" onclick="goTo('s9')"><span class="qicon">♡</span><span class="qlabel">Health</span></div>
+          <div class="quick-action" onclick="goTo('s6')"><span class="qicon">📖</span><span class="qlabel">Learn</span></div>
+          <div class="quick-action" onclick="goTo('s7')"><span class="qicon">🛒</span><span class="qlabel">Cart</span></div>
+        </div>
+        <div class="highlight-row" onclick="goTo('s9')">
+          <span class="hicon">♡</span>
+          <div class="htext"><strong>Medical Assistant</strong><span>Symptom guidance for babies 0–24 months</span></div>
+        </div>
+        <div class="highlight-row amber" onclick="goTo('s12')">
+          <span class="hicon">💬</span>
+          <div class="htext"><strong>Ask BumpToBloom</strong><span>Answers tailored to exactly where you are</span></div>
+        </div>
+        <p class="disclaimer">I'm here to help you feel informed, not to replace your care team. For anything about your health or your baby's, please check with your doctor, midwife or pediatrician.</p>
+      </div>
+      <div class="bottomnav">
+        <div class="navitem active"><span class="nicon">🏠</span><span class="nlabel">Home</span></div>
+        <div class="navitem" onclick="goTo('s5')"><span class="nicon">🌱</span><span class="nlabel">Track</span></div>
+        <div class="navitem" onclick="goTo('s12')"><span class="nicon">💬</span><span class="nlabel">Ask</span></div>
+        <div class="navitem" onclick="goTo('s9')"><span class="nicon">♡</span><span class="nlabel">Health</span></div>
+        <div class="navitem" onclick="goTo('s6')"><span class="nicon">📖</span><span class="nlabel">Learn</span></div>
+        <div class="navitem" onclick="goTo('s7')"><span class="nicon">🛒</span><span class="nlabel">Cart</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 5: Track (milestones) -->
+  <div class="screen" id="s5">
+    <div class="frame">
+      <div class="statusbar">9:41</div>
+      <div class="topbar">
+        <div class="topbar-row">
+          <div class="brand"><img class="mark" src="https://www.figma.com/api/mcp/asset/f5293120-d0f8-4a09-8698-f3571c91e733.png" alt="BumpToBloom logo"><span class="brand-name">BumpToBloom</span></div>
+          <button class="stage-pill" onclick="openModal()"><span class="pill-value">Month 8</span> <span class="pencil">✎</span></button>
+        </div>
+        <div class="stage-row">
+          <span class="stage-emoji">🌸</span><span class="stage-label">BLOOM</span>
+          <div class="progress-track"><div class="progress-fill" style="width:35%;"></div></div>
+        </div>
+      </div>
+      <div class="hairline"></div>
+      <div class="content">
+        <span class="section-eyebrow">MILESTONE TRACKER</span>
+        <p style="font-family:'Source Sans 3',sans-serif;font-size:14px;color:#4d5348;margin:0 0 12px 0;">0 of 9 noticed · based on 18 months</p>
+        <div class="track-strip-row">
+          <span class="chev" id="chev-left" onclick="scrollWeek(-1)">‹</span>
+          <div class="week-strip" id="track-strip">
+            <div class="week-circle" onclick="selectWeek(this)">NB</div><div class="week-circle" onclick="selectWeek(this)">1</div><div class="week-circle" onclick="selectWeek(this)">2</div>
+            <div class="week-circle" onclick="selectWeek(this)">3</div><div class="week-circle" onclick="selectWeek(this)">4</div><div class="week-circle" onclick="selectWeek(this)">5</div>
+            <div class="week-circle active" onclick="selectWeek(this)">6</div><div class="week-circle" onclick="selectWeek(this)">7</div>
+            <div class="week-circle" onclick="selectWeek(this)">8</div><div class="week-circle" onclick="selectWeek(this)">9</div>
+            <div class="week-circle" onclick="selectWeek(this)">10</div><div class="week-circle" onclick="selectWeek(this)">11</div>
+            <div class="week-circle" onclick="selectWeek(this)">12</div><div class="week-circle" onclick="selectWeek(this)">18</div>
+            <div class="week-circle" onclick="selectWeek(this)">24</div>
+          </div>
+          <span class="chev" id="chev-right" onclick="scrollWeek(1)">›</span>
+        </div>
+        <div class="info-card" style="margin-bottom:14px;">
+          <h4 style="margin-top:0;" id="track-hero-title">18 months — what is typical</h4>
+          <p id="track-hero-body">By 18 months, toddlers combine growing physical skills with early pretend play and a fast-expanding vocabulary.</p>
+        </div>
+        <div class="ms-group">
+          <div class="mstitle">🏃 Physical</div>
+          <div class="ms-row"><input type="checkbox"><label>Walks up steps holding a hand</label></div>
+          <div class="ms-row"><input type="checkbox"><label>Runs</label></div>
+          <div class="ms-row"><input type="checkbox"><label>Scribbles</label></div>
+        </div>
+        <div class="ms-group">
+          <div class="mstitle">🧩 Cognitive</div>
+          <div class="ms-row"><input type="checkbox"><label>Plays pretend, like feeding a doll</label></div>
+          <div class="ms-row"><input type="checkbox"><label>Points to show interest in something</label></div>
+        </div>
+        <div class="ms-group">
+          <div class="mstitle">💬 Language</div>
+          <div class="ms-row"><input type="checkbox"><label>Says several words</label></div>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <div class="navitem" onclick="goTo('s3')"><span class="nicon">🏠</span><span class="nlabel">Home</span></div>
+        <div class="navitem active"><span class="nicon">🌱</span><span class="nlabel">Track</span></div>
+        <div class="navitem" onclick="goTo('s12')"><span class="nicon">💬</span><span class="nlabel">Ask</span></div>
+        <div class="navitem" onclick="goTo('s9')"><span class="nicon">♡</span><span class="nlabel">Health</span></div>
+        <div class="navitem" onclick="goTo('s6')"><span class="nicon">📖</span><span class="nlabel">Learn</span></div>
+        <div class="navitem" onclick="goTo('s7')"><span class="nicon">🛒</span><span class="nlabel">Cart</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 6: Learn -->
+  <div class="screen" id="s6">
+    <div class="frame">
+      <div class="statusbar">9:41</div>
+      <div class="topbar">
+        <div class="topbar-row">
+          <div class="brand"><img class="mark" src="https://www.figma.com/api/mcp/asset/f5293120-d0f8-4a09-8698-f3571c91e733.png" alt="BumpToBloom logo"><span class="brand-name">BumpToBloom</span></div>
+          <button class="stage-pill" onclick="openModal()"><span class="pill-value">Month 8</span> <span class="pencil">✎</span></button>
+        </div>
+        <div class="stage-row">
+          <span class="stage-emoji">🌸</span><span class="stage-label">BLOOM</span>
+          <div class="progress-track"><div class="progress-fill" style="width:35%;"></div></div>
+        </div>
+      </div>
+      <div class="hairline"></div>
+      <div class="content">
+        <span class="section-eyebrow">GUIDANCE FEED</span>
+        <p class="section-title"><span class="pill-value">Month 8</span>, tailored to you</p>
+        <div class="cat-row" id="learn-cats">
+          <div class="cat-pill active" onclick="filterLearn(this,'all')">All</div>
+          <div class="cat-pill" onclick="filterLearn(this,'development')">Development</div>
+          <div class="cat-pill" onclick="filterLearn(this,'body')">Feeding</div>
+          <div class="cat-pill" onclick="filterLearn(this,'wellness')">Sleep</div>
+        </div>
+        <div class="article-card" data-cat="development">
+          <span class="tag">Development</span>
+          <h4>Sitting, crawling, and what comes next</h4>
+          <p>Most babies at this stage are working on sitting unsupported and may be starting to crawl.</p>
+          <span class="source">SOURCE · MONTH-BY-MONTH TRACKING</span>
+        </div>
+        <div class="article-card" data-cat="body">
+          <span class="tag">Feeding</span>
+          <h4>Best first finger foods</h4>
+          <p>Safe, nourishing foods perfect for your eight-month-old to try.</p>
+          <span class="source">SOURCE · GENERAL PEDIATRIC GUIDANCE</span>
+        </div>
+        <div class="article-card" data-cat="wellness">
+          <span class="tag">Sleep</span>
+          <h4>Sleep regression at eight months</h4>
+          <p>What causes it and how to get through it without losing your mind.</p>
+          <span class="source">SOURCE · GENERAL PEDIATRIC GUIDANCE</span>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <div class="navitem" onclick="goTo('s3')"><span class="nicon">🏠</span><span class="nlabel">Home</span></div>
+        <div class="navitem" onclick="goTo('s5')"><span class="nicon">🌱</span><span class="nlabel">Track</span></div>
+        <div class="navitem" onclick="goTo('s12')"><span class="nicon">💬</span><span class="nlabel">Ask</span></div>
+        <div class="navitem" onclick="goTo('s9')"><span class="nicon">♡</span><span class="nlabel">Health</span></div>
+        <div class="navitem active"><span class="nicon">📖</span><span class="nlabel">Learn</span></div>
+        <div class="navitem" onclick="goTo('s7')"><span class="nicon">🛒</span><span class="nlabel">Cart</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 7: Cart -->
+  <div class="screen" id="s7">
+    <div class="frame">
+      <div class="statusbar">9:41</div>
+      <div class="topbar" style="position:relative;">
+        <div class="topbar-row">
+          <div class="brand"><img class="mark" src="https://www.figma.com/api/mcp/asset/f5293120-d0f8-4a09-8698-f3571c91e733.png" alt="BumpToBloom logo"><span class="brand-name">BumpToBloom</span></div>
+          <button class="stage-pill" onclick="openModal()"><span class="pill-value">Month 8</span> <span class="pencil">✎</span></button>
+        </div>
+        <div class="stage-row">
+          <span class="stage-emoji">🌸</span><span class="stage-label">BLOOM</span>
+          <div class="progress-track"><div class="progress-fill" style="width:35%;"></div></div>
+        </div>
+        <div id="cart-badge" class="cart-badge" style="display:none;">0</div>
+      </div>
+      <div class="hairline"></div>
+      <div class="content">
+        <span class="section-eyebrow" id="cart-eyebrow">CURATED FOR EMMA</span>
+        <p class="section-title">Essentials for this age</p>
+        <p class="cart-intro">Age <span class="pill-value">Month 8</span></p>
+
+        <div class="product-card" data-price="12">
+          <div class="product-top">
+            <div class="product-thumb"></div>
+            <div class="product-info">
+              <div class="prow"><p class="pname">Teething Toys</p><p class="pprice">$12</p></div>
+              <p class="pdesc">Many babies start teething and mouthing objects around this stage.</p>
+            </div>
+          </div>
+          <div class="product-actions">
+            <button class="add-cart-btn" onclick="toggleCart(this)">+ Add to list</button>
+            <button class="retailer-btn">Amazon</button>
+          </div>
+        </div>
+
+        <div class="product-card" data-price="95">
+          <div class="product-top">
+            <div class="product-thumb"></div>
+            <div class="product-info">
+              <div class="prow"><p class="pname">High Chair</p><p class="pprice">$95</p></div>
+              <p class="pdesc">Useful as you approach starting solid foods.</p>
+            </div>
+          </div>
+          <div class="product-actions">
+            <button class="add-cart-btn" onclick="toggleCart(this)">+ Add to list</button>
+            <button class="retailer-btn">Amazon</button>
+          </div>
+        </div>
+
+        <div class="product-card" data-price="12">
+          <div class="product-top">
+            <div class="product-thumb"></div>
+            <div class="product-info">
+              <div class="prow"><p class="pname">Baby-Safe Mirror</p><p class="pprice">$12</p></div>
+              <p class="pdesc">Encourages social engagement during tummy time and play.</p>
+            </div>
+          </div>
+          <div class="product-actions">
+            <button class="add-cart-btn" onclick="toggleCart(this)">+ Add to list</button>
+            <button class="retailer-btn">Amazon</button>
+          </div>
+        </div>
+
+        <div class="back-link" onclick="goTo('s8')">View your list →</div>
+      </div>
+      <div class="bottomnav">
+        <div class="navitem" onclick="goTo('s3')"><span class="nicon">🏠</span><span class="nlabel">Home</span></div>
+        <div class="navitem" onclick="goTo('s5')"><span class="nicon">🌱</span><span class="nlabel">Track</span></div>
+        <div class="navitem" onclick="goTo('s12')"><span class="nicon">💬</span><span class="nlabel">Ask</span></div>
+        <div class="navitem" onclick="goTo('s9')"><span class="nicon">♡</span><span class="nlabel">Health</span></div>
+        <div class="navitem" onclick="goTo('s6')"><span class="nicon">📖</span><span class="nlabel">Learn</span></div>
+        <div class="navitem active"><span class="nicon">🛒</span><span class="nlabel">Cart</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 8: Cart list -->
+  <div class="screen" id="s8">
+    <div class="frame">
+      <div class="statusbar">9:41</div>
+      <div class="topbar">
+        <div class="topbar-row">
+          <div class="brand"><img class="mark" src="https://www.figma.com/api/mcp/asset/f5293120-d0f8-4a09-8698-f3571c91e733.png" alt="BumpToBloom logo"><span class="brand-name">BumpToBloom</span></div>
+          <button class="stage-pill" onclick="openModal()"><span class="pill-value">Month 8</span> <span class="pencil">✎</span></button>
+        </div>
+        <div class="stage-row">
+          <span class="stage-emoji">🌸</span><span class="stage-label">BLOOM</span>
+          <div class="progress-track"><div class="progress-fill" style="width:35%;"></div></div>
+        </div>
+      </div>
+      <div class="hairline"></div>
+      <div class="content">
+        <span class="section-eyebrow">CURATED FOR EMMA</span>
+        <p class="section-title">Your list</p>
+        <div class="cart-list-summary">
+          <p class="ltitle">YOUR LIST · <span id="list-count">0 items</span></p>
+          <div id="list-rows"></div>
+          <hr>
+          <div class="lrow ltotal"><span>Estimated total</span><span id="list-total">$0</span></div>
+          <p class="lnote">Indicative prices. Bloom Cart is a curated list, not a checkout — you complete any purchase on the retailer's own site.</p>
+        </div>
+        <div id="cart-item-cards"></div>
+        <div class="back-link" onclick="goTo('s7')">← Back</div>
+      </div>
+      <div class="bottomnav">
+        <div class="navitem" onclick="goTo('s3')"><span class="nicon">🏠</span><span class="nlabel">Home</span></div>
+        <div class="navitem" onclick="goTo('s5')"><span class="nicon">🌱</span><span class="nlabel">Track</span></div>
+        <div class="navitem" onclick="goTo('s12')"><span class="nicon">💬</span><span class="nlabel">Ask</span></div>
+        <div class="navitem" onclick="goTo('s9')"><span class="nicon">♡</span><span class="nlabel">Health</span></div>
+        <div class="navitem" onclick="goTo('s6')"><span class="nicon">📖</span><span class="nlabel">Learn</span></div>
+        <div class="navitem active"><span class="nicon">🛒</span><span class="nlabel">Cart</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 9: Health — Fever Checker (empty) -->
+  <div class="screen" id="s9">
+    <div class="frame">
+      <div class="statusbar">9:41</div>
+      <div class="topbar">
+        <div class="topbar-row">
+          <div class="brand"><img class="mark" src="https://www.figma.com/api/mcp/asset/f5293120-d0f8-4a09-8698-f3571c91e733.png" alt="BumpToBloom logo"><span class="brand-name">BumpToBloom</span></div>
+          <button class="stage-pill" onclick="openModal()"><span class="pill-value">Month 8</span> <span class="pencil">✎</span></button>
+        </div>
+      </div>
+      <div class="hairline"></div>
+      <div class="content">
+        <div class="emergency-banner">⚠ Trouble breathing, blue lips, unresponsive, or a seizure: call 911 now. Do not wait for guidance here.</div>
+        <div class="health-card">
+          <h3>Fever Checker</h3>
+          <p class="sub">Guidance based on your baby's age and temperature.</p>
+          <label class="field-label">Baby's age in months</label>
+          <input class="field-input" id="age-input" placeholder="0" type="number">
+          <label class="field-label">Temperature °F</label>
+          <input class="field-input" id="temp-input" placeholder="e.g. 101.5" type="text">
+          <p class="check-title">Also check any that apply</p>
+          <div class="check-row"><input type="checkbox"><label>Trouble breathing, grunting, or breathing unusually fast</label></div>
+          <div class="check-row"><input type="checkbox"><label>Blue or gray lips, face, or tongue</label></div>
+          <div class="check-row"><input type="checkbox"><label>Very hard to wake, or unusually limp</label></div>
+          <div class="check-row"><input type="checkbox"><label>Stiff neck</label></div>
+          <div class="check-row"><input type="checkbox"><label>A rash that doesn't fade when you press on it</label></div>
+          <div class="check-row"><input type="checkbox"><label>Fewer than 3 wet diapers in 24 hours</label></div>
+          <div class="check-row"><input type="checkbox"><label>Inconsolable crying for more than 2 hours</label></div>
+          <div class="check-row"><input type="checkbox"><label>A seizure or convulsion</label></div>
+          <button class="check-btn" onclick="goTo('s10')">Check</button>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <div class="navitem" onclick="goTo('s3')"><span class="nicon">🏠</span><span class="nlabel">Home</span></div>
+        <div class="navitem" onclick="goTo('s5')"><span class="nicon">🌱</span><span class="nlabel">Track</span></div>
+        <div class="navitem" onclick="goTo('s12')"><span class="nicon">💬</span><span class="nlabel">Ask</span></div>
+        <div class="navitem active"><span class="nicon">♡</span><span class="nlabel">Health</span></div>
+        <div class="navitem" onclick="goTo('s6')"><span class="nicon">📖</span><span class="nlabel">Learn</span></div>
+        <div class="navitem" onclick="goTo('s7')"><span class="nicon">🛒</span><span class="nlabel">Cart</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 10: Health — Fever Checker (filled) -->
+  <div class="screen" id="s10">
+    <div class="frame">
+      <div class="statusbar">9:41</div>
+      <div class="topbar">
+        <div class="topbar-row">
+          <div class="brand"><img class="mark" src="https://www.figma.com/api/mcp/asset/f5293120-d0f8-4a09-8698-f3571c91e733.png" alt="BumpToBloom logo"><span class="brand-name">BumpToBloom</span></div>
+          <button class="stage-pill" onclick="openModal()"><span class="pill-value">Month 8</span> <span class="pencil">✎</span></button>
+        </div>
+      </div>
+      <div class="hairline"></div>
+      <div class="content">
+        <div class="emergency-banner">⚠ Trouble breathing, blue lips, unresponsive, or a seizure: call 911 now. Do not wait for guidance here.</div>
+        <div class="health-card">
+          <h3>Fever Checker</h3>
+          <p class="sub">Guidance based on your baby's age and temperature.</p>
+          <label class="field-label">Baby's age in months</label>
+          <input class="field-input" value="8" type="number">
+          <label class="field-label">Temperature °F</label>
+          <input class="field-input" value="101.4" type="text">
+          <p class="check-title">Also check any that apply</p>
+          <div class="check-row"><input type="checkbox" checked><label>Trouble breathing, grunting, or breathing unusually fast</label></div>
+          <div class="check-row"><input type="checkbox"><label>Blue or gray lips, face, or tongue</label></div>
+          <div class="check-row"><input type="checkbox"><label>Very hard to wake, or unusually limp</label></div>
+          <div class="check-row"><input type="checkbox"><label>Stiff neck</label></div>
+          <div class="check-row"><input type="checkbox"><label>A rash that doesn't fade when you press on it</label></div>
+          <div class="check-row"><input type="checkbox"><label>Fewer than 3 wet diapers in 24 hours</label></div>
+          <div class="check-row"><input type="checkbox"><label>Inconsolable crying for more than 2 hours</label></div>
+          <div class="check-row"><input type="checkbox"><label>A seizure or convulsion</label></div>
+          <button class="check-btn" onclick="goTo('s11')">Check</button>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <div class="navitem" onclick="goTo('s3')"><span class="nicon">🏠</span><span class="nlabel">Home</span></div>
+        <div class="navitem" onclick="goTo('s5')"><span class="nicon">🌱</span><span class="nlabel">Track</span></div>
+        <div class="navitem" onclick="goTo('s12')"><span class="nicon">💬</span><span class="nlabel">Ask</span></div>
+        <div class="navitem active"><span class="nicon">♡</span><span class="nlabel">Health</span></div>
+        <div class="navitem" onclick="goTo('s6')"><span class="nicon">📖</span><span class="nlabel">Learn</span></div>
+        <div class="navitem" onclick="goTo('s7')"><span class="nicon">🛒</span><span class="nlabel">Cart</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 11: Health — Fever article -->
+  <div class="screen" id="s11">
+    <div class="frame">
+      <div class="statusbar">9:41</div>
+      <div class="topbar">
+        <div class="topbar-row">
+          <div class="brand"><img class="mark" src="https://www.figma.com/api/mcp/asset/f5293120-d0f8-4a09-8698-f3571c91e733.png" alt="BumpToBloom logo"><span class="brand-name">BumpToBloom</span></div>
+          <button class="stage-pill" onclick="openModal()"><span class="pill-value">Month 8</span> <span class="pencil">✎</span></button>
+        </div>
+      </div>
+      <div class="hairline"></div>
+      <div class="content">
+        <div class="back-link" style="text-align:left;margin-top:0;" onclick="goTo('s10')">← All topics</div>
+        <div class="fever-article-head">
+          <div class="fever-icon">🌡</div>
+          <h2>Fever</h2>
+        </div>
+        <div class="info-card" style="margin-bottom:14px;">
+          <p style="margin:0;">A fever is usually a sign your baby's immune system is fighting an infection. How concerning it is depends heavily on your baby's age.</p>
+        </div>
+        <div class="info-card">
+          <h4>Usually manageable at home</h4>
+          <ul class="bullet-list">
+            <li>Dress baby lightly and keep the room comfortably cool</li>
+            <li>Offer breast milk, formula, or water frequently to prevent dehydration</li>
+            <li>A lukewarm (not cold) sponge bath can help baby feel more comfortable</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h4>Call your pediatrician if</h4>
+          <ul class="bullet-list">
+            <li>Fever lasts more than 24 hours in a baby under 2, or more than 3 days in an older baby</li>
+            <li>Fever comes with fussiness, poor feeding, or fewer wet diapers than usual</li>
+            <li>You're simply unsure and want reassurance — that's always a good reason to call</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h4>Seek emergency care if</h4>
+          <ul class="bullet-list">
+            <li>Trouble breathing, blue/gray skin, or a seizure — call 911</li>
+          </ul>
+        </div>
+        <div class="back-link" onclick="goTo('s10')">← Back</div>
+      </div>
+      <div class="bottomnav">
+        <div class="navitem" onclick="goTo('s3')"><span class="nicon">🏠</span><span class="nlabel">Home</span></div>
+        <div class="navitem" onclick="goTo('s5')"><span class="nicon">🌱</span><span class="nlabel">Track</span></div>
+        <div class="navitem" onclick="goTo('s12')"><span class="nicon">💬</span><span class="nlabel">Ask</span></div>
+        <div class="navitem active"><span class="nicon">♡</span><span class="nlabel">Health</span></div>
+        <div class="navitem" onclick="goTo('s6')"><span class="nicon">📖</span><span class="nlabel">Learn</span></div>
+        <div class="navitem" onclick="goTo('s7')"><span class="nicon">🛒</span><span class="nlabel">Cart</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 12: Ask — Chat -->
+  <div class="screen" id="s12">
+    <div class="frame">
+      <div class="statusbar">9:41</div>
+      <div class="topbar">
+        <div class="topbar-row">
+          <div class="brand"><img class="mark" src="https://www.figma.com/api/mcp/asset/f5293120-d0f8-4a09-8698-f3571c91e733.png" alt="BumpToBloom logo"><span class="brand-name">BumpToBloom</span></div>
+          <button class="stage-pill" onclick="openModal()"><span class="pill-value">Month 8</span> <span class="pencil">✎</span></button>
+        </div>
+        <div class="stage-row">
+          <span class="stage-emoji">🌸</span><span class="stage-label">BLOOM</span>
+          <div class="progress-track"><div class="progress-fill" style="width:35%;"></div></div>
+        </div>
+      </div>
+      <div class="hairline"></div>
+      <div class="content" style="display:flex;flex-direction:column;">
+        <div class="chat-notice">Answers here are general information, not medical advice. Anything about a symptom goes to the Health tab's structured tools.</div>
+        <div class="chat-scroll" id="chat-scroll">
+          <div class="bubble bloom">Hi. I am Bloom, your parenting companion. Ask me anything about feeding, sleep, milestones, or development.</div>
+          <div class="bubble user">Emma has not been sleeping well the past two nights.</div>
+          <div class="bubble bloom">Sleep disruptions at eight months are common. This is often the eight-month regression. What helps:<br>- Keep the bedtime routine consistent<br>- Watch for tired cues after 2–2.5 hours awake<br>Would you like a personalised sleep schedule for Emma?</div>
+        </div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chat-input" placeholder="Ask Bloom anything…" onkeydown="if(event.key==='Enter')sendChat();">
+          <button class="send-btn" onclick="sendChat()">➤</button>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <div class="navitem" onclick="goTo('s3')"><span class="nicon">🏠</span><span class="nlabel">Home</span></div>
+        <div class="navitem" onclick="goTo('s5')"><span class="nicon">🌱</span><span class="nlabel">Track</span></div>
+        <div class="navitem active"><span class="nicon">💬</span><span class="nlabel">Ask</span></div>
+        <div class="navitem" onclick="goTo('s9')"><span class="nicon">♡</span><span class="nlabel">Health</span></div>
+        <div class="navitem" onclick="goTo('s6')"><span class="nicon">📖</span><span class="nlabel">Learn</span></div>
+        <div class="navitem" onclick="goTo('s7')"><span class="nicon">🛒</span><span class="nlabel">Cart</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: edit age (overlays whichever screen is active) -->
+  <div class="modal-overlay" id="stage-modal">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <p class="modal-title">Edit age</p>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <p class="modal-value" id="modal-week-value">Month 8</p>
+      <input type="range" class="month-slider" min="0" max="24" value="8" id="modal-slider" oninput="document.getElementById('modal-week-value').textContent='Month '+this.value">
+      <div class="month-minmax"><span>Month 0</span><span>Month 24</span></div>
+      <button class="modal-save" onclick="saveStage()">Save</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let babyName = 'Emma Rose';
+let babyMonth = 8;
+let cartItems = {};
+
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('visible'));
+  document.getElementById(id).classList.add('visible');
+  const content = document.querySelector('#'+id+' .content');
+  if(content) content.scrollTop = 0;
+}
+
+function selectJourney(which){
+  // only 'baby' is selectable; kept for clarity/future options
+  document.getElementById('opt-baby').classList.add('selected');
+}
+
+function continueOnboarding(){
+  const nameVal = document.getElementById('baby-name-input').value.trim();
+  if(nameVal) babyName = nameVal;
+  babyMonth = parseInt(document.getElementById('month-label-2').textContent.replace('Month ',''),10) || 8;
+  updateAllDynamic();
+  goTo('s3');
+}
+
+function updateAllDynamic(){
+  document.querySelectorAll('.pill-value').forEach(el=> el.textContent = 'Month ' + babyMonth);
+  document.getElementById('profile-eyebrow').textContent = 'BLOOM · MONTH ' + babyMonth;
+  document.getElementById('profile-name').textContent = babyName;
+  document.getElementById('profile-sub').textContent = babyMonth + ' months';
+  document.getElementById('cart-eyebrow').textContent = 'CURATED FOR ' + babyName.split(' ')[0].toUpperCase();
+  document.getElementById('modal-slider').value = babyMonth;
+  document.getElementById('modal-week-value').textContent = 'Month ' + babyMonth;
+}
+
+function openModal(){
+  document.getElementById('modal-slider').value = babyMonth;
+  document.getElementById('modal-week-value').textContent = 'Month ' + babyMonth;
+  document.getElementById('stage-modal').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('stage-modal').classList.remove('open');
+}
+function saveStage(){
+  babyMonth = parseInt(document.getElementById('modal-slider').value,10);
+  updateAllDynamic();
+  closeModal();
+}
+
+function filterLearn(el,cat){
+  document.querySelectorAll('#learn-cats .cat-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.article-card').forEach(card=>{
+    card.style.display = (cat==='all' || card.dataset.cat===cat) ? 'block' : 'none';
+  });
+}
+
+function toggleCart(btn){
+  const card = btn.closest('.product-card');
+  const name = card.querySelector('.pname').textContent;
+  const price = parseInt(card.dataset.price,10);
+  const added = btn.classList.toggle('added');
+  btn.textContent = added ? '✓ Added' : '+ Add to list';
+  if(added){ cartItems[name] = price; } else { delete cartItems[name]; }
+  renderCartBadge();
+  renderCartList();
+}
+function renderCartBadge(){
+  const badge = document.getElementById('cart-badge');
+  const count = Object.keys(cartItems).length;
+  badge.style.display = count>0 ? 'flex' : 'none';
+  badge.textContent = count;
+}
+function renderCartList(){
+  const rows = document.getElementById('list-rows');
+  const cards = document.getElementById('cart-item-cards');
+  const count = document.getElementById('list-count');
+  const total = document.getElementById('list-total');
+  rows.innerHTML=''; cards.innerHTML='';
+  let sum = 0;
+  Object.entries(cartItems).forEach(([name,price])=>{
+    sum += price;
+    rows.innerHTML += `<div class="lrow"><span>${name}</span><span>$${price}</span></div>`;
+    cards.innerHTML += `
+      <div class="product-card">
+        <div class="product-top">
+          <div class="product-thumb"></div>
+          <div class="product-info">
+            <div class="prow"><p class="pname">${name}</p><p class="pprice">$${price}</p></div>
+          </div>
+        </div>
+        <div class="product-actions">
+          <button class="add-cart-btn added" disabled>✓ On your list</button>
+          <button class="retailer-btn">Amazon</button>
+        </div>
+      </div>`;
+  });
+  count.textContent = Object.keys(cartItems).length + ' items';
+  total.textContent = '$' + sum;
+}
+
+function sendChat(){
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if(!text) return;
+  appendBubble(text,'user');
+  input.value='';
+  setTimeout(()=>{
+    appendBubble("Thanks for sharing — that's a great question for this stage. In general, keep an eye on consistency day-to-day rather than any single moment, and bring it up with your pediatrician if it keeps nagging at you.", 'bloom');
+  }, 500);
+}
+function appendBubble(text,who){
+  const scroll = document.getElementById('chat-scroll');
+  const div = document.createElement('div');
+  div.className = 'bubble ' + who;
+  div.textContent = text;
+  scroll.appendChild(div);
+  const content = document.querySelector('#s12 .content');
+  content.scrollTop = content.scrollHeight;
+}
+
+function scrollWeek(dir){
+  const strip = document.getElementById('track-strip');
+  strip.scrollBy({left: dir*120, behavior:'smooth'});
+}
+
+const trackCopy = {
+  'NB':{title:"Newborn — what is typical", body:"Newborns mostly eat, sleep, and start to focus on faces up close. Expect big feeding and sleep needs."},
+  '1':{title:"1 month — what is typical", body:"Babies begin to lift their head briefly during tummy time and follow objects with their eyes."},
+  '2':{title:"2 months — what is typical", body:"Social smiles emerge, and babies start cooing in response to voices."},
+  '3':{title:"3 months — what is typical", body:"Head control improves and babies may start batting at toys."},
+  '4':{title:"4 months — what is typical", body:"Many babies roll from tummy to back and laugh out loud."},
+  '5':{title:"5 months — what is typical", body:"Babies often reach for objects and bring hands to midline."},
+  '6':{title:"6 months — what is typical", body:"Sitting with support and starting solid foods often begin around now."},
+  '7':{title:"7 months — what is typical", body:"Babies often sit without support and may start babbling consonants."},
+  '8':{title:"8 months — what is typical", body:"Crawling attempts and pincer-grasp practice with finger foods are common."},
+  '9':{title:"9 months — what is typical", body:"Pulling to stand and object permanence games like peekaboo are common."},
+  '10':{title:"10 months — what is typical", body:"Cruising along furniture and waving bye-bye often appear."},
+  '11':{title:"11 months — what is typical", body:"Babies may take first independent steps and say simple words like 'mama'."},
+  '12':{title:"12 months — what is typical", body:"Many toddlers take first steps and say a couple of clear words."},
+  '18':{title:"18 months — what is typical", body:"By 18 months, toddlers combine growing physical skills with early pretend play and a fast-expanding vocabulary."},
+  '24':{title:"24 months — what is typical", body:"Two-year-olds often run, use short phrases, and start parallel play with other children."}
+};
+function selectWeek(el){
+  const strip = document.getElementById('track-strip');
+  strip.querySelectorAll('.week-circle').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  el.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+  const key = el.textContent.trim();
+  const copy = trackCopy[key];
+  if(copy){
+    document.getElementById('track-hero-title').textContent = copy.title;
+    document.getElementById('track-hero-body').textContent = copy.body;
+  }
+}
+
+function restartProto(){
+  cartItems = {};
+  babyName = 'Emma Rose';
+  babyMonth = 8;
+  document.getElementById('baby-name-input').value = '';
+  document.getElementById('month-label-2').textContent = 'Month 8';
+  document.querySelectorAll('.add-cart-btn.added').forEach(b=>{ b.classList.remove('added'); b.textContent='+ Add to list'; });
+  updateAllDynamic();
+  renderCartBadge();
+  renderCartList();
+  goTo('s1');
+}
+
+updateAllDynamic();
+</script>
+</body>
+</html>
